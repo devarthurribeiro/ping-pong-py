@@ -224,8 +224,9 @@ class PingPongGUI:
 
 
 if __name__ == '__main__':
-    protocol = sys.argv[1] if len(sys.argv) > 1 else 'TCP'
-    player_id = int(sys.argv[2]) if len(sys.argv) > 2 else 0
+    server_host = sys.argv[1] if len(sys.argv) > 1 else 'localhost'
+    protocol = sys.argv[2] if len(sys.argv) > 2 else 'TCP'
+    player_id = int(sys.argv[3]) if len(sys.argv) > 3 else 0
     
-    gui = PingPongGUI('localhost', player_id, protocol)
+    gui = PingPongGUI(server_host, player_id, protocol)
     gui.run()
