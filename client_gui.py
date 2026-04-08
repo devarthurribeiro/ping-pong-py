@@ -31,6 +31,10 @@ class PingPongGUI:
         self.socket = None
         self.lock = threading.Lock()
         
+        self.connected = False
+        self.last_packet_time = time.time()
+        self.connection_timeout = 2.0
+        
         self.keys_pressed = {'up': False, 'down': False}
         self.last_sent = time.time()
         self.send_rate = 1/60
@@ -110,6 +114,8 @@ class PingPongGUI:
                 
                 with self.lock:
                     receive_time = time.time()
+                    self.last_packet_time = receive_time
+                    self.connected = True
                     new_state = GameState.deserialize(data)
                     
                     old_pos = (self.game_state.ball.x, self.game_state.ball.y)
@@ -175,6 +181,23 @@ class PingPongGUI:
             score_rect = score_text.get_rect(center=(self.width // 2, self.offset_y - 30))
             self.screen.blit(score_text, score_rect)
             
+            time_since_packet = time.time() - self.last_packet_time
+            if time_since_packet > self.connection_timeout:
+                self.connected = False
+            
+            if self.connected:
+                status_color = (100, 255, 100)
+                status_str = "✓ CONECTADO"
+            else:
+                status_color = (255, 100, 100)
+                status_str = "✗ DESCONECTADO"
+            
+            connection_text = self.font_small.render(status_str, True, status_color)
+            self.screen.blit(connection_text, (20, 20))
+            
+            server_text = self.font_small.render(f"Servidor: {self.server_host}:{self.server_port_tcp if self.protocol == 'TCP' else self.server_port_udp}", True, (200, 200, 200))
+            self.screen.blit(server_text, (20, 50))
+            
             if self.metrics['latencies']:
                 avg_latency = sum(self.metrics['latencies']) / len(self.metrics['latencies'])
                 protocol_text = f"{self.protocol} | Latência: {avg_latency:.1f}ms"
@@ -184,20 +207,23 @@ class PingPongGUI:
                     protocol_text += f" | Salto: {avg_jump:.1f}px"
                 
                 info_surface = self.font_small.render(protocol_text, True, (255, 255, 100))
-                self.screen.blit(info_surface, (20, 20))
+                self.screen.blit(info_surface, (20, 80))
             
             if self.protocol == 'TCP':
-                status = "TCP (Confiável)"
+                protocol_label = "TCP (Confiável)"
                 color = (100, 200, 255)
             else:
-                status = "UDP (Rápido)"
+                protocol_label = "UDP (Rápido)"
                 color = (100, 255, 100)
             
-            status_text = self.font_small.render(status, True, color)
-            self.screen.blit(status_text, (self.width - 200, 20))
+            protocol_text = self.font_small.render(protocol_label, True, color)
+            self.screen.blit(protocol_text, (self.width - 250, 20))
             
-            controls_text = self.font_small.render("↑ Cima | ↓ Baixo", True, (200, 200, 200))
-            self.screen.blit(controls_text, (self.width // 2 - 100, self.height - 30))
+            player_text = self.font_small.render(f"Player: {self.player_id}", True, (200, 200, 200))
+            self.screen.blit(player_text, (self.width - 250, 50))
+            
+            controls_text = self.font_small.render("SETA CIMA = Subir | SETA BAIXO = Descer", True, (200, 200, 200))
+            self.screen.blit(controls_text, (self.width // 2 - 200, self.height - 30))
         
         pygame.display.flip()
 
