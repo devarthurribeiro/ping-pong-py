@@ -18,12 +18,13 @@ elif [ "$1" = "client" ]; then
     host=${2:-localhost}
     protocol=${3:-TCP}
     player=${4:-0}
-    echo "Iniciando cliente ($protocol - Player $player) conectando a $host..."
-    python3 client_gui.py "$host" "$protocol" "$player"
+    delay=${5:-0}
+    echo "Iniciando cliente ($protocol - Player $player) conectando a $host (delay: ${delay}ms)..."
+    python3 client_gui.py "$host" "$protocol" "$player" "$delay"
 else
     echo "Uso:"
     echo "  ./run.sh server                              - Inicia o servidor"
-    echo "  ./run.sh client [host] [TCP|UDP] [0|1]      - Inicia cliente gráfico"
+    echo "  ./run.sh client [host] [TCP|UDP] [0|1] [delay_ms]  - Inicia cliente gráfico"
     echo ""
     echo "Exemplos:"
     echo "  ./run.sh server"

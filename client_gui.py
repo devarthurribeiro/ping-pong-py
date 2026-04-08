@@ -7,8 +7,10 @@ import sys
 from game import GameState
 
 class PingPongGUI:
-    def __init__(self, server_host='localhost', player_id=0, protocol='TCP'):
+    def __init__(self, server_host='localhost', player_id=0, protocol='TCP', delay_ms=0):
         pygame.init()
+        
+        self.delay = delay_ms / 1000.0  # converter ms para segundos
         
         self.width = 1000
         self.height = 700
@@ -84,6 +86,9 @@ class PingPongGUI:
                     
                     send_time = current_time
                     
+                    if self.delay > 0:
+                        time.sleep(self.delay)
+                    
                     if self.protocol == 'TCP':
                         data = struct.pack('!d', send_time) + command.encode()
                         try:
@@ -112,6 +117,9 @@ class PingPongGUI:
                 if not data:
                     break
                 
+                if self.delay > 0:
+                    time.sleep(self.delay)
+                
                 with self.lock:
                     receive_time = time.time()
                     self.last_packet_time = receive_time
@@ -122,15 +130,12 @@ class PingPongGUI:
                     
                     time_diff = receive_time - new_state.timestamp
                     
+                    self.game_state.ball.x = new_state.ball.x
+                    self.game_state.ball.y = new_state.ball.y
+                    self.game_state.ball.vx = new_state.ball.vx
+                    self.game_state.ball.vy = new_state.ball.vy
                     if self.protocol == 'UDP' and time_diff > 0:
-                        self.game_state.ball.x = new_state.ball.x
-                        self.game_state.ball.y = new_state.ball.y
-                        self.game_state.ball.vx = new_state.ball.vx
-                        self.game_state.ball.vy = new_state.ball.vy
                         self.game_state.extrapolate_ball(time_diff)
-                    else:
-                        alpha = min(0.1, time_diff)
-                        self.game_state.interpolate_ball(new_state, alpha)
                     
                     new_pos = (self.game_state.ball.x, self.game_state.ball.y)
                     jump = ((new_pos[0] - old_pos[0])**2 + (new_pos[1] - old_pos[1])**2)**0.5
@@ -253,6 +258,7 @@ if __name__ == '__main__':
     server_host = sys.argv[1] if len(sys.argv) > 1 else 'localhost'
     protocol = sys.argv[2] if len(sys.argv) > 2 else 'TCP'
     player_id = int(sys.argv[3]) if len(sys.argv) > 3 else 0
+    delay_ms = int(sys.argv[4]) if len(sys.argv) > 4 else 0
     
-    gui = PingPongGUI(server_host, player_id, protocol)
+    gui = PingPongGUI(server_host, player_id, protocol, delay_ms)
     gui.run()

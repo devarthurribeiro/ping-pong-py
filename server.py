@@ -46,6 +46,7 @@ class GameServer:
         while self.running:
             try:
                 client_socket, addr = self.tcp_socket.accept()
+                client_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
                 player_id = len(self.clients_tcp)
                 self.clients_tcp.append({
                     'socket': client_socket,

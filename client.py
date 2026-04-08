@@ -129,17 +129,15 @@ class GameClient:
                     
                     time_diff = receive_time - new_state.timestamp
                     
+                    self.game_state.ball.x = new_state.ball.x
+                    self.game_state.ball.y = new_state.ball.y
+                    self.game_state.ball.vx = new_state.ball.vx
+                    self.game_state.ball.vy = new_state.ball.vy
                     if self.protocol == 'UDP' and time_diff > 0:
-                        self.game_state.ball.x = new_state.ball.x
-                        self.game_state.ball.y = new_state.ball.y
-                        self.game_state.ball.vx = new_state.ball.vx
-                        self.game_state.ball.vy = new_state.ball.vy
                         self.game_state.extrapolate_ball(time_diff)
                         self.metrics['position_extrapolations'].append(time_diff)
                     else:
-                        alpha = min(0.1, time_diff)
-                        self.game_state.interpolate_ball(new_state, alpha)
-                        self.metrics['position_interpolations'].append(alpha)
+                        self.metrics['position_interpolations'].append(time_diff)
                     
                     self.game_state.paddle1 = new_state.paddle1
                     self.game_state.paddle2 = new_state.paddle2
